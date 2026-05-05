@@ -1,5 +1,7 @@
 @echo off
 
+cls
+
 set "dir=%temp%\nuitka_%Random%"
 
 mkdir "%dir%\%~1"
@@ -19,14 +21,16 @@ python -m pip install "Nuitka[all]"
 python -m nuitka ^
     --assume-yes-for-downloads ^
     --onefile ^
+    --standalone ^
     --enable-plugin=multiprocessing ^
-    --include-package=multiprocessing ^
     --follow-imports ^
     --remove-output ^
     --debug ^
     "--output-dir=%dir%" ^
     "%dir%\run.py"
 
-rmdir /s /q "%dir%\%~1"
+rmdir /s /q "%dir%\mymod"
+
+cls
 
 "%dir%\run.exe"
