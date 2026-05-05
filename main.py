@@ -1,24 +1,40 @@
 from philh_myftp_biz.terminal import Args
 from philh_myftp_biz.process import Run
-from philh_myftp_biz.pc import loc
+from philh_myftp_biz.text import hex
+from philh_myftp_biz.pc import loc, Path
+
+from runpy import run_module
+from importlib import import_module
 
 #=======================================================
 
-SOURCE = loc.script
+MOD = Path(Args[0])
 
-TEMP = loc.temp.child('path')
+TEMPDIR = loc.temp.child(hex.encode(MOD.path))
 
-NAME = loc.script.name
+Run(
+    args = [
+        'nuitka',
+        '--assume-yes-for-downloads',
+        '--module', MOD.name,
+        f'--output-dir={TEMPDIR}'
+    ],
+    dir = MOD.parent,
+    terminal = 'pym'
+)
+"""
+Run(
+    args = [MOD.name, *Args],
+    dir = TEMPDIR,
+    terminal = 'pym'
+)
+"""
+with TEMPDIR.cd:
 
-#=======================================================
+    run_module(
+        mod_name = MOD.name, 
+        run_name = "__main__",
+        init_globals = {}
+    )
 
-SOURCE.parent.cd()
-
-hash = '-'.join(f.hash for f in TEMP.descendants if f.ext=='py')
-
-# TODO Pass args
-
-#python -m nuitka ^
-#    --assume-yes-for-downloads ^
-#    --module "%mod%" ^
-#    --include-package=%mod%
+    #import_module('__main__', MOD.name)
