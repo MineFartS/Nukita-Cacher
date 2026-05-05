@@ -1,23 +1,26 @@
-@echo on
+@echo off
 
-set "out_dir=%temp%\nukita_%Random%"
+set "dir=%temp%\nuitka_%Random%"
 
-python -m pip install "Nuitka[all]"
+mkdir "%dir%\%~1"
+xcopy /E /I /Y "%~f1" "%dir%\%~1"
+
+(
+    echo from runpy import run_module
+    echo if __name__=='__main__': run_module^("%~1", run_name="__main__"^)
+) > "%dir%\run.py"
+
+::python -m pip install "Nuitka[all]"
 
 python -m nuitka ^
     --assume-yes-for-downloads ^
-    --standalone ^
-    --output-dir="%out_dir%" ^
-    --main="%~1"
+    --onefile ^
+    "--include-module=%~1" ^
+    --follow-imports ^
+    --remove-output ^
+    "--output-dir=%dir%" ^
+    "%dir%\run.py"
 
-cd /d "%out_dir%\%~1.dist"
+rmdir /s /q "%dir%\%~1"
 
-dir
-
-"%~1.exe"
-
-::python -c "import sys, importlib.util; n='%~n1'; s=importlib.util.find_spec(n); m=importlib.util.module_from_spec(s); m.__dict__.update({'__name__': '__main__', '__file__': s.origin, '__builtins__': __builtins__}); sys.modules['__main__'] = m; s.loader.exec_module(m)"
-
-::python -c "import sys, importlib.util; name='%~n1'; spec=importlib.util.find_spec(name); m=importlib.util.module_from_spec(spec); m.__name__='__main__'; sys.modules[name]=m; spec.loader.exec_module(m)"
-
-:: python -c "import runpy; runpy.run_module('%~1', run_name='__main__', init_globals={})"
+"%dir%\run.exe"
